@@ -60,7 +60,6 @@ class _MyAppState extends State<MyApp> {
                   userImage = File(image.path);
                 });
               }
-
               Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -158,7 +157,7 @@ class Upload extends StatelessWidget {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.file(userImage),
+            // Image.file(userImage),
             Text('이미지업로드화면'),
             IconButton(
                 onPressed: () {
