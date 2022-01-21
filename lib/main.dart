@@ -130,7 +130,19 @@ class _MainContentState extends State<MainContent> {
     var result = await http
         .get(Uri.parse('https://codingapple1.github.io/app/more1.json'));
     var result2 = jsonDecode(result.body);
-    widget.addData(result2);
+
+    if (widget.data[widget.data.length - 1]['id'] < result2['id']) {
+      widget.addData(result2);
+    }
+  }
+
+  moreData2() async {
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/more2.json'));
+    var result2 = jsonDecode(result.body);
+    if (widget.data[widget.data.length - 1]['id'] < result2['id']) {
+      widget.addData(result2);
+    }
   }
 
   @override
@@ -139,6 +151,7 @@ class _MainContentState extends State<MainContent> {
     scroll.addListener(() {
       if (scroll.position.pixels == scroll.position.maxScrollExtent) {
         moreData();
+        moreData2();
       }
     });
   }
