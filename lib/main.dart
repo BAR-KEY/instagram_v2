@@ -25,6 +25,28 @@ class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
   var userImage;
+  var userContent;
+  setUserContent(a) {
+    setState(() {
+      userContent = a;
+    });
+  }
+
+  updateData() {
+    var myData = {
+      "id": data.length,
+      "image": userImage,
+      "likes": 0,
+      "date": 'January 21',
+      "content": userContent,
+      'liked': false,
+      "user": 'BARKEY96',
+    };
+    setState(() {
+      data.insert(0, myData);
+    });
+  }
+
   addData(a) {
     setState(() {
       data.add(a);
@@ -38,6 +60,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       data = result2;
     });
+    print(data);
   }
 
   @override
@@ -63,7 +86,10 @@ class _MyAppState extends State<MyApp> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (c) => Upload(userImage: userImage)));
+                      builder: (c) => Upload(
+                          userImage: userImage,
+                          setUserContent: setUserContent,
+                          updateData: updateData)));
             },
             icon: Icon(Icons.add_box_outlined)),
       ]),
@@ -100,7 +126,6 @@ class MainContent extends StatefulWidget {
 
 class _MainContentState extends State<MainContent> {
   var scroll = ScrollController();
-  var duringGetData = false;
   moreData() async {
     var result = await http
         .get(Uri.parse('https://codingapple1.github.io/app/more1.json'));
@@ -112,7 +137,6 @@ class _MainContentState extends State<MainContent> {
   void initState() {
     super.initState();
     scroll.addListener(() {
-      print(scroll.position.pixels);
       if (scroll.position.pixels == scroll.position.maxScrollExtent) {
         moreData();
       }
@@ -126,18 +150,18 @@ class _MainContentState extends State<MainContent> {
           itemCount: widget.data.length,
           controller: scroll,
           itemBuilder: (c, i) {
-            return Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image.network(widget.data[i]['image']),
-                  Text('좋아요  ${widget.data[i]['likes'].toString()}',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(widget.data[i]['user'] ?? 'null'),
-                  Text(widget.data[i]['content'] ?? 'null'),
-                ],
-              ),
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                widget.data[i]['image'].runtimeType == String
+                    ? Image.network(widget.data[i]['image'])
+                    : Image.file(widget.data[i]['image']),
+                Text('좋아요  ${widget.data[i]['likes']}',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(widget.data[i]['user'] ?? 'null'),
+                Text(widget.data[i]['date'] ?? 'null'),
+                Text(widget.data[i]['content'] ?? 'null'),
+              ],
             );
           });
     } else {
@@ -147,23 +171,47 @@ class _MainContentState extends State<MainContent> {
 }
 
 class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage}) : super(key: key);
-  final userImage;
+  Upload({
+    Key? key,
+    this.userImage,
+    this.setUserContent,
+    this.updateData,
+  }) : super(key: key);
+  final userImage, setUserContent, updateData;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          actions: [
+            IconButton(
+                onPressed: () {
+                  updateData();
+                  Navigator.pop(context);
+                },
+                icon: Icon(Icons.send))
+          ],
+        ),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image.file(userImage),
+            Image.file(userImage),
             Text('이미지업로드화면'),
+            TextField(
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: '글제목을 입력하세요.',
+              ),
+              onChanged: (text) {
+                setUserContent(text);
+              },
+            ),
             IconButton(
                 onPressed: () {
                   Navigator.pop(context);
                 },
-                icon: Icon(Icons.close))
+                icon: Icon(Icons.close)),
           ],
         ));
   }
