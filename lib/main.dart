@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import "./style.dart" as style;
 import 'package:http/http.dart' as http;
@@ -5,13 +6,14 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-// import 'package:flutter/rendering.dart';
+import 'package:provider/provider.dart';
+// import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:flutter/cupertino.dart';
 
 void main() {
-  runApp(
-    MaterialApp(theme: style.theme, home: const MyApp()),
-  );
+  runApp(ChangeNotifierProvider(
+      create: (c) => Store1(),
+      child: MaterialApp(theme: style.theme, home: MyApp())));
 }
 
 var a = TextStyle(color: Colors.blue);
@@ -62,17 +64,22 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       data = result2;
     });
+    savaData();
   }
 
   savaData() async {
     for (int i = 0; i < data.length; i++) {
       var storage = await SharedPreferences.getInstance();
-      // storage.setString('name', '박희문');
-      // storage.setStringList('bool', ['name', 'name2']);
-      // storage.remove('name');
-      // var result = storage.get('name');
-      // print(result);
 
+      // var myData = {
+      //   "id": data[i]['id'],
+      //   "image": data[i]["image"],
+      //   "likes": data[i]["likes"],
+      //   "date": data[i]["data"],
+      //   "content": data[i]["content"],
+      //   'liked': data[i]["liked"],
+      //   "user": data[i]["user"],
+      // };
       var myData = {
         "id": data[i]['id'],
         "image": data[i]["image"],
@@ -86,6 +93,7 @@ class _MyAppState extends State<MyApp> {
       storage.setString('myData', jsonEncode(myData));
       var result = storage.getString('myData') ?? 'null';
       print(jsonDecode(result));
+      // print(jsonDecode(result)['age']);
     }
   }
 
@@ -94,7 +102,6 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     getData();
-    savaData();
   }
 
   @override
@@ -198,7 +205,16 @@ class _MainContentState extends State<MainContent> {
                     : Image.file(widget.data[i]['image']),
                 Text('좋아요  ${widget.data[i]['likes']}',
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(widget.data[i]['user'] ?? 'null'),
+                GestureDetector(
+                  child: Text(widget.data[i]['user'] ?? 'null'),
+                  onTap: () {
+                    Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => Profile(),
+                        ));
+                  },
+                ),
                 Text(widget.data[i]['date'] ?? 'null'),
                 Text(widget.data[i]['content'] ?? 'null'),
               ],
@@ -252,6 +268,36 @@ class Upload extends StatelessWidget {
                   Navigator.pop(context);
                 },
                 icon: Icon(Icons.close)),
+          ],
+        ));
+  }
+}
+
+class Store1 extends ChangeNotifier {
+  var name = 'BARKEY';
+  var follower = 0;
+  changeName() {
+    name = 'CHANGED NAME';
+    notifyListeners();
+  }
+}
+
+class Profile extends StatelessWidget {
+  const Profile({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        appBar: AppBar(),
+        body: Column(
+          children: [
+            Text(context.watch<Store1>().name),
+            Text(context.watch<Store1>().follower.toString()),
+            ElevatedButton(
+                onPressed: () {
+                  context.read<Store1>().changeName();
+                },
+                child: Text('팔로우'))
           ],
         ));
   }
