@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:flutter/rendering.dart';
 
 void main() {
@@ -60,7 +62,31 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       data = result2;
     });
-    print(data);
+  }
+
+  savaData() async {
+    for (int i = 0; i < data.length; i++) {
+      var storage = await SharedPreferences.getInstance();
+      // storage.setString('name', '박희문');
+      // storage.setStringList('bool', ['name', 'name2']);
+      // storage.remove('name');
+      // var result = storage.get('name');
+      // print(result);
+
+      var myData = {
+        "id": data[i]['id'],
+        "image": data[i]["image"],
+        "likes": data[i]["likes"],
+        "date": data[i]["data"],
+        "content": data[i]["content"],
+        'liked': data[i]["liked"],
+        "user": data[i]["user"],
+      };
+
+      storage.setString('myData', jsonEncode(myData));
+      var result = storage.getString('myData') ?? 'null';
+      print(jsonDecode(result));
+    }
   }
 
   @override
@@ -68,6 +94,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     getData();
+    savaData();
   }
 
   @override
