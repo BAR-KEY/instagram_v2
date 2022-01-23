@@ -11,9 +11,14 @@ import 'package:provider/provider.dart';
 // import 'package:flutter/cupertino.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(
       create: (c) => Store1(),
-      child: MaterialApp(theme: style.theme, home: MyApp())));
+    ),
+    ChangeNotifierProvider(
+      create: (c) => Store2(),
+    )
+  ], child: MaterialApp(theme: style.theme, home: MyApp())));
 }
 
 var a = TextStyle(color: Colors.blue);
@@ -274,31 +279,92 @@ class Upload extends StatelessWidget {
 }
 
 class Store1 extends ChangeNotifier {
-  var name = 'BARKEY';
   var follower = 0;
-  changeName() {
-    name = 'CHANGED NAME';
+  var followBool = false;
+  getData() async {
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    var result2 = jsonDecode(result.body);
+    profileImage = result2;
+    print(profileImage[0]);
+    notifyListeners();
+  }
+
+  var profileImage = [];
+
+  followCount() {
+    if (followBool == false) {
+      follower++;
+      followBool = true;
+    } else {
+      follower--;
+      followBool = false;
+    }
     notifyListeners();
   }
 }
 
-class Profile extends StatelessWidget {
+class Store2 extends ChangeNotifier {
+  var name = 'BARKEY';
+}
+
+class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
+
+  @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<Store1>().getData();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(),
-        body: Column(
-          children: [
-            Text(context.watch<Store1>().name),
-            Text(context.watch<Store1>().follower.toString()),
-            ElevatedButton(
-                onPressed: () {
-                  context.read<Store1>().changeName();
-                },
-                child: Text('팔로우'))
+        appBar: AppBar(
+          title: Text(context.watch<Store2>().name),
+        ),
+        body: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: ProfileHeader(),
+            ),
+            SliverGrid(
+                delegate: SliverChildBuilderDelegate(
+                  (c, i) => SizedBox(
+                    child: Image.network(
+                      '${context.read<Store1>().profileImage[i]}',
+                    ),
+                  ),
+                  childCount: context.read<Store1>().profileImage.length,
+                ),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3))
           ],
         ));
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+      CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.grey,
+      ),
+      Text('팔로우 ${(10 + context.watch<Store1>().follower).toString()}명'),
+      ElevatedButton(
+          onPressed: () {
+            context.read<Store1>().followCount();
+          },
+          child: Text('팔로우')),
+    ]);
   }
 }
