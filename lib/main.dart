@@ -7,10 +7,21 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'notification.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+
+import 'shop.dart';
 // import 'package:cached_network_image/cached_network_image.dart';
 // import 'package:flutter/cupertino.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(
       create: (c) => Store1(),
@@ -107,11 +118,18 @@ class _MyAppState extends State<MyApp> {
     super.initState();
 
     getData();
+    initNotification(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        child: Text('알림'),
+        onPressed: () {
+          showNotification2();
+        },
+      ),
       appBar: AppBar(title: Text('Instargram'), actions: [
         IconButton(
             onPressed: () async {
@@ -130,11 +148,9 @@ class _MyAppState extends State<MyApp> {
                           setUserContent: setUserContent,
                           updateData: updateData)));
             },
-            icon: Icon(Icons.add_box_outlined)),
+            icon: Icon(Icons.add_box_outlined))
       ]),
-      body: [
-        MainContent(data: data, addData: addData),
-      ][tab],
+      body: [MainContent(data: data, addData: addData), Shop()][tab],
       bottomNavigationBar: BottomNavigationBar(
           showSelectedLabels: false,
           showUnselectedLabels: false,
